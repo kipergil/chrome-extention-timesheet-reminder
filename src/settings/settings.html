@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timesheet Reminder Settings</title>
+    <link rel="stylesheet" href="../../src/styles/settings.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Timesheet Reminder Settings</h1>
+        
+        <!-- Add Reminder Section -->
+        <section class="add-reminder-section">
+            <h2>Add New Reminder</h2>
+            <button id="addReminderBtn" class="btn btn-success">+ Add Reminder</button>
+        </section>
+
+        <!-- Reminders List Section -->
+        <section class="reminders-section">
+            <h2>Your Reminders</h2>
+            <div id="remindersList" class="reminders-list">
+                <p class="no-reminders">No reminders configured yet</p>
+            </div>
+        </section>
+
+        <!-- Timezone Section -->
+        <section class="timezone-section">
+            <h2>Timezone</h2>
+            <div class="form-group">
+                <label for="timezone">Current Timezone:</label>
+                <p id="currentTimezone" class="timezone-display"></p>
+                <button id="resetTimezoneBtn" class="btn btn-secondary">Reset to System Timezone</button>
+            </div>
+            <div class="form-group">
+                <label for="snoozeDuration">Snooze Interval (minutes):</label>
+                <input 
+                    type="number" 
+                    id="snoozeDuration" 
+                    class="input-field" 
+                    min="1" 
+                    value="60"
+                    placeholder="Enter snooze duration in minutes"
+                />
+                <small class="help-text">How long the reminder is snoozed when you click Snooze. Enter any value from 1 minute up.</small>
+            </div>
+            <div class="form-group">
+            <label for="maxSnoozeCount">Max Snooze Count Per Reminder:</label>
+                <select id="maxSnoozeCount" class="select-field">
+                    <option value="0">0 (No Snooze)</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                <small class="help-text">Snooze button can be used only this many times before acknowledgment is required.</small>
+            </div>
+            <button id="saveSnoozeConfigBtn" class="btn btn-primary">Save Snooze Setting</button>
+            <span id="snoozeSaveStatus" class="save-status"></span>
+        </section>
+
+        <!-- Danger Zone -->
+        <section class="danger-section">
+            <h2>Danger Zone</h2>
+            <button id="clearAllRemindersBtn" class="btn btn-danger">Clear All Reminders</button>
+            <small>This action cannot be undone</small>
+        </section>
+    </div>
+
+    <!-- Modal for adding/editing reminders -->
+    <div id="reminderModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Reminder</h2>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <form id="reminderForm" class="reminder-form">
+                <div class="form-group">
+                    <label for="reminderMessage">Reminder Message:</label>
+                    <input 
+                        type="text" 
+                        id="reminderMessage" 
+                        placeholder="Time to fill your timesheet!"
+                        class="input-field"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="reminderActionLabel">Action Button Name:</label>
+                    <input 
+                        type="text" 
+                        id="reminderActionLabel" 
+                        placeholder="Open Timesheet"
+                        class="input-field"
+                    >
+                    <small class="help-text">Optional. If set with a URL, this label is shown on the popup action button.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="reminderActionUrl">Action URL:</label>
+                    <input 
+                        type="url" 
+                        id="reminderActionUrl" 
+                        placeholder="https://example.com/timesheet"
+                        class="input-field"
+                    >
+                    <small class="help-text">Optional. Opens this URL when the reminder action button is clicked.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="recurrenceType">Recurrence Type:</label>
+                    <select id="recurrenceType" class="select-field">
+                        <option value="minutely">Minutely</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly" selected>Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+
+                <!-- Minutely options -->
+                <div id="minutelyOptions" class="recurrence-options hidden">
+                    <div class="form-group">
+                        <label for="intervalMinutes">Every how many minutes?</label>
+                        <input type="number" id="intervalMinutes" min="1" max="120" class="input-field" placeholder="Minutes" value="5">
+                        <small class="help-text">Example: 5 means every 5 minutes (00, 05, 10, ...).</small>
+                    </div>
+                </div>
+
+                <!-- Daily options (always visible for daily) -->
+                <div id="dailyOptions" class="recurrence-options hidden">
+                    <div class="form-group">
+                        <label for="dailyHour">Time:</label>
+                        <div class="time-picker">
+                            <input type="number" id="dailyHour" min="0" max="23" class="input-field" placeholder="Hour" value="09">
+                            <span>:</span>
+                            <input type="number" id="dailyMinute" min="0" max="59" class="input-field" placeholder="Min" value="00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly options -->
+                <div id="weeklyOptions" class="recurrence-options">
+                    <div class="form-group">
+                        <label>Days of Week:</label>
+                        <div id="weeklyDays" class="weekly-day-grid">
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="0"> Sunday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="1"> Monday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="2"> Tuesday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="3"> Wednesday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="4"> Thursday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="5" checked> Friday</label>
+                            <label class="weekly-day-item"><input type="checkbox" class="weekly-day-checkbox" value="6"> Saturday</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="weeklyHour">Time:</label>
+                        <div class="time-picker">
+                            <input type="number" id="weeklyHour" min="0" max="23" class="input-field" placeholder="Hour" value="15">
+                            <span>:</span>
+                            <input type="number" id="weeklyMinute" min="0" max="59" class="input-field" placeholder="Min" value="00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly options -->
+                <div id="monthlyOptions" class="recurrence-options hidden">
+                    <div class="form-group">
+                        <label for="monthlyDay">Day of Month:</label>
+                        <input type="number" id="monthlyDay" min="1" max="28" class="input-field" placeholder="Day (1-28)" value="1">
+                        <small class="help-text">Use days 1-28 to ensure it works every month</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyHour">Time:</label>
+                        <div class="time-picker">
+                            <input type="number" id="monthlyHour" min="0" max="23" class="input-field" placeholder="Hour" value="09">
+                            <span>:</span>
+                            <input type="number" id="monthlyMinute" min="0" max="59" class="input-field" placeholder="Min" value="00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reminderEnabled">
+                        <input type="checkbox" id="reminderEnabled" checked>
+                        Enabled
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Reminder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="settings.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f7fafc;
+}
+
+.popup-container {
+  width: 280px;
+  padding: 14px;
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #1f2d3d;
+}
+
+.reminder-messages {
+  margin-bottom: 10px;
+}
+
+.section-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2d3d;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.reminder-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.reminder-list-item,
+.reminder-list-empty {
+  padding: 8px;
+  border-radius: 8px;
+  background: #edf2f7;
+}
+
+.reminder-list-item.disabled {
+  opacity: 0.7;
+}
+
+.reminder-message-text,
+.reminder-message-meta {
+  margin: 0;
+}
+
+.reminder-message-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.reminder-message-meta,
+.reminder-list-empty {
+  font-size: 11px;
+  color: #4a5568;
+}
+
+.reminder-message-meta {
+  margin-top: 4px;
+}
+
+.reminder-message-details {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #d3dce7;
+  font-variant-numeric: tabular-nums;
+}
+
+.reminder-detail-line {
+  margin: 0 0 2px;
+  font-size: 11px;
+  color: #2d3748;
+}
+
+.reminder-detail-line:last-child {
+  margin-bottom: 0;
+}
+
+.btn {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #e2e8f0;
+  color: #1f2d3d;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #0b68d0;
+  color: #fff;
+}
+
+.btn:hover {
+  filter: brightness(0.98);
+}
+
+.status {
+  margin: 8px 0 0;
+  min-height: 18px;
+  font-size: 12px;
+  color: #2f855a;
+}

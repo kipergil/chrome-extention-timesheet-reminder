@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timesheet Reminder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup-container">
+    <h1>Timesheet Reminder</h1>
+    <section class="reminder-messages" aria-labelledby="reminderMessagesTitle">
+      <h2 id="reminderMessagesTitle" class="section-title">Reminder Messages</h2>
+      <ul id="reminderMessagesList" class="reminder-list">
+        <li class="reminder-list-empty">No reminders configured.</li>
+      </ul>
+    </section>
+    <button id="openSettingsBtn" class="btn primary">Open Settings</button>
+    <button id="clearAckBtn" class="btn">Clear Acknowledgements</button>
+    <button id="clearSnoozeBtn" class="btn">Clear Snooze Count</button>
+    <p id="statusText" class="status" aria-live="polite"></p>
+  </main>
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+#timesheet-reminder-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#timesheet-reminder-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.timesheet-reminder-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 24, 0.55);
+}
+
+.timesheet-reminder-content {
+  position: relative;
+  z-index: 1;
+  width: min(520px, calc(100vw - 24px));
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1a2433;
+  padding: 28px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+}
+
+.timesheet-reminder-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.timesheet-reminder-message {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.timesheet-reminder-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.timesheet-reminder-btn {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.acknowledge-btn {
+  background: #168753;
+  color: #fff;
+}
+
+.snooze-btn {
+  background: #0b68d0;
+  color: #fff;
+}
+
+.open-timesheet-btn {
+  background: #d88200;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .timesheet-reminder-content {
+    padding: 22px;
+  }
+
+  .timesheet-reminder-title {
+    font-size: 20px;
+  }
+
+  .timesheet-reminder-message {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Timesheet Reminder",
+  "version": "1.0.0",
+  "description": "Get friendly reminders to fill your timesheet at configured times",
+  "permissions": [
+    "storage",
+    "alarms",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/background-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_title": "Timesheet Reminder",
+    "default_popup": "src/popup/popup.html"
+  },
+  "icons": {
+    "128": "assets/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/styles/popup-modal.css",
+        "src/content/popup-template.html"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
