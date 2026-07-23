@@ -35,6 +35,16 @@ When you first install the extension:
 ### Method 2: Chrome Web Store
 *(Coming soon)*
 
+## Testing
+
+The reminder scheduling, storage, and background worker logic have a unit test suite (Node's built-in test runner, no dependencies to install):
+
+```
+npm test
+```
+
+This covers recurrence/trigger calculation, snooze/acknowledge state, storage CRUD, and the background worker's alarm and message handling, using an in-memory mock of the `chrome.*` APIs. Run it after any change to `src/utils/`, `src/background/background-worker.js`, or the URL/recurrence validation in `src/settings/settings.js`, to catch regressions before loading the extension in Chrome.
+
 ## Usage
 
 ### Open Settings
@@ -105,6 +115,7 @@ localStorage['userPreferences'] = {
 ```
 chrome-extension-timesheet-reminder/
 ├── manifest.json                    # Extension configuration
+├── package.json                     # `npm test` entry point (no runtime deps)
 ├── README.md                        # This file
 ├── src/
 │   ├── background/
@@ -123,6 +134,7 @@ chrome-extension-timesheet-reminder/
 │       ├── recurrence.js            # Recurrence calculation
 │       ├── storage.js               # Storage wrapper
 │       └── time-checker.js          # Reminder trigger logic
+├── test/                            # Unit tests (node --test), see "Testing"
 └── assets/
     └── icon-128.png                 # Extension icon
 ```
@@ -227,10 +239,7 @@ You can disable notifications in the settings page (future enhancement).
 This extension requires:
 - `storage` — Save reminders and settings
 - `alarms` — Schedule reminder checks
-- `notifications` — Send browser notifications
-- `scripting` — Run content script on web pages
-- `activeTab` — Detect current tab
-- `<all_urls>` — Inject popups on any website
+- `<all_urls>` (host permission) — Inject reminder popups on any website
 
 ## License
 
