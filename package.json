@@ -1,0 +1,10 @@
+{
+  "name": "timesheet-reminder-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension that reminds users to fill their timesheet",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

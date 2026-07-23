@@ -251,7 +251,7 @@ function updateReminderCountdowns() {
 /**
  * Get human-readable recurrence text
  */
-function getRecurrenceText(recurrence) {
+export function getRecurrenceText(recurrence) {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const timeStr = `${String(recurrence.hour).padStart(2, '0')}:${String(recurrence.minute).padStart(2, '0')}`;
 
@@ -310,7 +310,7 @@ function setupEventListeners() {
  * Validate URL format - restricted to http(s) so a saved action URL can never
  * be a javascript: (or other) URI that executes code when opened.
  */
-function isValidUrl(string) {
+export function isValidUrl(string) {
   try {
     const url = new URL(string);
     return url.protocol === 'http:' || url.protocol === 'https:';
