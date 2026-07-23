@@ -82,6 +82,23 @@ export function updateReminder(reminderId, updates) {
 }
 
 /**
+ * Update multiple reminders atomically in a single read-modify-write cycle.
+ * Use this instead of calling updateReminder() concurrently for several
+ * reminders - parallel get-then-set calls can race and silently drop updates.
+ * @param {Object} updatesById - Map of reminderId -> updates object
+ */
+export function updateReminders(updatesById) {
+  return getReminders().then((reminders) => {
+    const updated = reminders.map((reminder) => {
+      const updates = updatesById[reminder.id];
+      return updates ? { ...reminder, ...updates } : reminder;
+    });
+
+    return setReminders(updated);
+  });
+}
+
+/**
  * Delete a reminder
  * @param {string} reminderId - ID of reminder to delete
  */

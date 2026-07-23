@@ -5,9 +5,7 @@
   "description": "Get friendly reminders to fill your timesheet at configured times",
   "permissions": [
     "storage",
-    "alarms",
-    "scripting",
-    "activeTab"
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>"

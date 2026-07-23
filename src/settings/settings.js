@@ -307,12 +307,13 @@ function setupEventListeners() {
 }
 
 /**
- * Validate URL format
+ * Validate URL format - restricted to http(s) so a saved action URL can never
+ * be a javascript: (or other) URI that executes code when opened.
  */
 function isValidUrl(string) {
   try {
-    new URL(string);
-    return true;
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch (e) {
     return false;
   }
@@ -504,12 +505,12 @@ async function handleReminderFormSubmit(e) {
     return;
   }
   
-  if (type !== 'minutely' && (recurrence.hour < 0 || recurrence.hour > 23 || recurrence.minute < 0 || recurrence.minute > 59)) {
+  if (type !== 'minutely' && (!Number.isInteger(recurrence.hour) || recurrence.hour < 0 || recurrence.hour > 23 || !Number.isInteger(recurrence.minute) || recurrence.minute < 0 || recurrence.minute > 59)) {
     alert('Please enter valid time values');
     return;
   }
 
-  if (type === 'minutely' && (recurrence.intervalMinutes < 1 || recurrence.intervalMinutes > 120)) {
+  if (type === 'minutely' && (!Number.isInteger(recurrence.intervalMinutes) || recurrence.intervalMinutes < 1 || recurrence.intervalMinutes > 120)) {
     alert('Please enter a valid minute interval between 1 and 120');
     return;
   }
@@ -518,8 +519,8 @@ async function handleReminderFormSubmit(e) {
     alert('Please select at least one day of week');
     return;
   }
-  
-  if (type === 'monthly' && (recurrence.dayOfMonth < 1 || recurrence.dayOfMonth > 28)) {
+
+  if (type === 'monthly' && (!Number.isInteger(recurrence.dayOfMonth) || recurrence.dayOfMonth < 1 || recurrence.dayOfMonth > 28)) {
     alert('Please enter a day between 1 and 28');
     return;
   }
