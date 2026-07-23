@@ -79,29 +79,27 @@ export function getNextTriggerTime(recurrence, timezone) {
  */
 export function shouldTriggerReminder(recurrence, timezone, lastShownTimestamp, nowOverride = null) {
   const now = nowOverride || getNowInTimezone(timezone);
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
   const currentDayOfWeek = now.getDay();
   const currentDayOfMonth = now.getDate();
 
   if (recurrence.type === 'minutely') {
-    const intervalMinutes = Math.max(1, recurrence.intervalMinutes || 1);
-    const minutesSinceMidnight = (currentHour * 60) + currentMinute;
-    const isOnIntervalBoundary = minutesSinceMidnight % intervalMinutes === 0;
-    if (!isOnIntervalBoundary) {
-      return false;
-    }
-
+    // Trigger as soon as we're in a new interval bucket that hasn't been
+    // acknowledged yet, rather than requiring the check to land on the exact
+    // boundary minute - alarms can fire late (throttling, sleep/wake), and an
+    // exact-boundary requirement would silently skip the bucket entirely.
     return !isAcknowledgedInCurrentInterval(recurrence, timezone, now, lastShownTimestamp);
   }
-  
+
   const reminderHour = recurrence.hour;
   const reminderMinute = recurrence.minute;
-  
-  // Check if current time matches reminder time (within same minute)
-  const timeMatches = currentHour === reminderHour && currentMinute === reminderMinute;
-  
-  if (!timeMatches) {
+
+  const scheduledTimeToday = new Date(now);
+  scheduledTimeToday.setHours(reminderHour, reminderMinute, 0, 0);
+
+  // Trigger once the scheduled time has passed for today, rather than requiring
+  // an exact minute match - alarms can fire late (system sleep, browser restart,
+  // throttling), and an exact match would silently skip the whole period.
+  if (now < scheduledTimeToday) {
     return false;
   }
 

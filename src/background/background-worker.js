@@ -3,7 +3,7 @@
  * Manages reminder scheduling and triggering
  */
 
-import { initializeDefaultReminders, getReminders, getUserPreferences, updateReminder } from '../utils/storage.js';
+import { initializeDefaultReminders, getReminders, getUserPreferences, updateReminder, updateReminders } from '../utils/storage.js';
 import { getEarliestNextReminderTimestamp, getRemindersThatShouldTrigger } from '../utils/time-checker.js';
 
 const NEXT_REMINDER_ALARM = 'nextReminderCheck';
@@ -84,7 +84,8 @@ function checkForReminders() {
     console.log(`Triggering ${reminders.length} reminder(s)`);
     const triggeredAt = Date.now();
 
-    return Promise.all(reminders.map((reminder) => {
+    const updatesById = {};
+    reminders.forEach((reminder) => {
       const updates = {
         lastTriggeredAt: triggeredAt
       };
@@ -98,8 +99,12 @@ function checkForReminders() {
       }
 
       reminder.lastTriggeredAt = triggeredAt;
-      return updateReminder(reminder.id, updates);
-    })).then(() => {
+      updatesById[reminder.id] = updates;
+    });
+
+    // Apply all updates in a single read-modify-write cycle so concurrently
+    // triggered reminders don't race and clobber each other's storage writes.
+    return updateReminders(updatesById).then(() => {
       reminders.forEach((reminder) => {
         triggerReminder(reminder);
       });

@@ -83,7 +83,7 @@ function showReminderPopup(reminder) {
       const actionUrl = (reminder.actionUrl || '').trim();
       const actionButtonLabel = (reminder.actionButtonLabel || '').trim();
 
-      if (actionUrl) {
+      if (actionUrl && isSafeHttpUrl(actionUrl)) {
         openTimesheetBtn.style.display = 'block';
         openTimesheetBtn.textContent = actionButtonLabel || 'Open Link';
         openTimesheetBtn.addEventListener('click', () => {
@@ -166,6 +166,20 @@ function snoozeReminder(reminderId) {
 
     console.log('Reminder snoozed response:', response);
   });
+}
+
+/**
+ * Only http(s) URLs are allowed to be opened - guards against a stored
+ * actionUrl (e.g. from before URL validation was added) containing a
+ * javascript: or other URI that would execute code when opened.
+ */
+function isSafeHttpUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
 }
 
 function ensurePopupStyles() {
