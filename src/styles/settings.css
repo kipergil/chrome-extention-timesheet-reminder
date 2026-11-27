@@ -391,6 +391,40 @@ label {
   margin-top: 10px;
 }
 
+/* Support section */
+.support-section {
+  border-left-color: #ff5e5b;
+  background: linear-gradient(135deg, #fff5e9 0%, #ffe6e0 100%);
+  text-align: center;
+}
+
+.support-section h2 {
+  margin-top: 0;
+  color: #d35400;
+}
+
+.support-section p {
+  color: #7a4a2b;
+  font-size: 14px;
+  max-width: 520px;
+  margin: 0 auto 16px;
+  line-height: 1.5;
+}
+
+.btn-kofi {
+  background: #ff5e5b;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 26px;
+  margin: 0;
+  text-decoration: none;
+}
+
+.btn-kofi:hover {
+  background: #e4443f;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {

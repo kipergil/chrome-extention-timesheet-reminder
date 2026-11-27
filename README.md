@@ -2,6 +2,8 @@
 
 A Chrome extension that sends friendly reminders to fill your timesheet at configured times. Set multiple reminders for any day and time with support for daily, weekly, and monthly recurrence.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kipergil)
+
 ## Features
 
 ✅ **Customizable Reminders** — Add multiple reminders with different schedules
