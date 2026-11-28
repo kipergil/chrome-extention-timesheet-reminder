@@ -2,11 +2,11 @@
  * Reminders manager - helper functions for reminder CRUD operations
  */
 
-import { 
-  addReminder, 
-  updateReminder, 
-  deleteReminder, 
-  setReminders
+import {
+  addReminder,
+  updateReminder,
+  deleteReminder,
+  replaceAllReminders
 } from '../utils/storage.js';
 
 /**
@@ -34,5 +34,5 @@ export function deleteReminderFromStorage(reminderId) {
  * Clear all reminders
  */
 export function clearAllReminders() {
-  return setReminders([]);
+  return replaceAllReminders([]);
 }
