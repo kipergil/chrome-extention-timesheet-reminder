@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Chrome extension that reminds users to fill their timesheet",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test",
+    "package": "node scripts/build-package.mjs"
   }
 }

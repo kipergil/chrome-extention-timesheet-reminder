@@ -3,6 +3,7 @@
   "name": "Timesheet Reminder",
   "version": "1.0.0",
   "description": "Get friendly reminders to fill your timesheet at configured times",
+  "homepage_url": "https://github.com/kipergil/chrome-extention-timesheet-reminder",
   "permissions": [
     "storage",
     "alarms"
@@ -23,9 +24,18 @@
   ],
   "action": {
     "default_title": "Timesheet Reminder",
-    "default_popup": "src/popup/popup.html"
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
   },
   "icons": {
+    "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
+    "48": "assets/icon-48.png",
     "128": "assets/icon-128.png"
   },
   "web_accessible_resources": [
