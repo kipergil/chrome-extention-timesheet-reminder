@@ -55,14 +55,34 @@ Shows the user a configurable, recurring on-page popup reminder (e.g. to fill in
 
 ## Screenshots / promotional images
 
-Not included here — these need actual screenshots of the extension running (the toolbar popup, the settings page, and a reminder popup on a sample page). Capture them locally (1280×800 or 640×400 px, PNG/JPEG) before submitting; the dashboard requires at least one.
+Generated and ready to upload, in `store-assets/`:
+
+| File | Size | Use |
+|---|---|---|
+| `store-assets/screenshots/screenshot-1-reminder-popup.png` | 1280×800 | Hero shot — the reminder popup injected on a sample page |
+| `store-assets/screenshots/screenshot-2-settings.png` | 1280×800 | Settings page with multiple reminders configured |
+| `store-assets/screenshots/screenshot-3-add-reminder.png` | 1280×800 | Add/Edit Reminder modal, showing recurrence options |
+| `store-assets/screenshots/screenshot-4-popup-dashboard.png` | 1280×800 | Toolbar popup dashboard, composited into a browser-chrome mockup |
+| `store-assets/promo/promo-tile-440x280.png` | 440×280 | Optional small promo tile |
+
+All screenshots use seeded sample data and a local mock "Internal Tools Portal" demo page (not a real company/site) — no real timesheet data or third-party branding is depicted. Upload up to 5 screenshots; the dashboard requires at least one. The marquee promo tile (1400×560) is optional and only used if your listing is ever featured — not generated here, since it's rarely needed for a first submission.
+
+## Building the upload package
+
+```
+npm run package
+```
+
+This runs the test suite, validates `manifest.json` (every icon/script/resource path it references must exist on disk), copies only the runtime files the extension needs into `build/package/`, and zips it as `build/timesheet-reminder-v<version>.zip` with `manifest.json` at the zip root — exactly what the Developer Dashboard's upload expects. Pass `--skip-tests` to skip the test run, or `--out-dir=<dir>` to change where it writes. See `scripts/build-package.mjs`.
+
+The script was also used to verify the packaged zip by unzipping it and loading *that* directory (not the source tree) as an unpacked extension — confirming the file list in the script's allow-list is complete and nothing extra is needed.
 
 ## Pre-submission checklist
 
-- [ ] Icons present at 16/32/48/128px as real PNGs (fixed — see `assets/`)
-- [ ] `manifest.json` validates and only requests permissions actually used
-- [ ] Privacy policy written (`PRIVACY_POLICY.md`) and hosted at a public URL
-- [ ] At least one real screenshot of the extension in use
-- [ ] Zip the repo contents (not the repo folder itself) for upload, excluding `.git/`, `test/`, `node_modules/`, and the `*.md` docs if you'd rather keep the package lean
+- [x] Icons present at 16/32/48/128px as real PNGs (fixed — see `assets/`)
+- [x] `manifest.json` validates and only requests permissions actually used
+- [x] Screenshots and a promo tile generated (see above)
+- [x] Build script produces a verified, store-ready zip (`npm run package`)
+- [ ] Privacy policy (`PRIVACY_POLICY.md`) hosted at a public URL (e.g. GitHub Pages) and pasted into the dashboard's privacy policy field — a repo file path alone will not satisfy this requirement
 - [ ] $5 one-time Chrome Web Store developer registration fee paid (if not already)
-- [ ] Test the packed `.zip` by loading it unpacked one more time before upload
+- [ ] Run `npm run package`, then actually submit `build/timesheet-reminder-v<version>.zip` on the Developer Dashboard

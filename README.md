@@ -48,6 +48,14 @@ npm test
 
 This covers recurrence/trigger calculation, snooze/acknowledge state, storage CRUD, and the background worker's alarm and message handling, using an in-memory mock of the `chrome.*` APIs. Run it after any change to `src/utils/`, `src/background/background-worker.js`, or the URL/recurrence validation in `src/settings/settings.js`, to catch regressions before loading the extension in Chrome.
 
+## Building a Chrome Web Store package
+
+```
+npm run package
+```
+
+Runs the tests, validates `manifest.json`, and produces `build/timesheet-reminder-v<version>.zip` — ready to upload as-is to the Developer Dashboard. See `scripts/build-package.mjs` and `STORE_LISTING.md` (listing copy, permission justifications, and generated screenshots in `store-assets/`) for the rest of the submission checklist.
+
 ## Usage
 
 ### The Toolbar Popup
