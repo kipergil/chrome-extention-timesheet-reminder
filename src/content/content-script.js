@@ -74,8 +74,12 @@ function showReminderPopup(reminder) {
 
     if (snoozeBtn) {
       snoozeBtn.addEventListener('click', () => {
+        // Only close the modal (locally and across tabs) once the snooze is
+        // confirmed - closing unconditionally here would race ahead of the
+        // background worker's response and dismiss the popup even when the
+        // snooze limit was hit, hiding the "limit reached" notice before it
+        // could ever be shown.
         snoozeReminder(reminder.id);
-        broadcastCloseAllModals();
       });
     }
 
@@ -156,16 +160,35 @@ function snoozeReminder(reminderId) {
   }, (response) => {
     if (response?.status === 'ok') {
       removeReminderPopup();
+      broadcastCloseAllModals();
       return;
     }
 
     if (response?.status === 'limit_reached') {
-      alert(`Snooze limit reached (${response.currentSnoozeCount}/${response.maxSnoozeCount}). Please acknowledge this reminder.`);
+      // Shown inline rather than via alert() - a native alert from a content
+      // script is attributed to the current webpage ("example.com says..."),
+      // which is confusing and looks like the site itself is prompting.
+      showReminderNotice(`Snooze limit reached (${response.currentSnoozeCount}/${response.maxSnoozeCount}). Please acknowledge this reminder.`);
+      const snoozeBtn = document.getElementById('timesheetSnoozeBtn');
+      if (snoozeBtn) {
+        snoozeBtn.disabled = true;
+        snoozeBtn.textContent = `Snooze Limit Reached (${response.maxSnoozeCount}/${response.maxSnoozeCount})`;
+      }
       return;
     }
 
     console.log('Reminder snoozed response:', response);
   });
+}
+
+function showReminderNotice(message) {
+  const notice = document.getElementById('timesheetReminderNotice');
+  if (!notice) {
+    return;
+  }
+
+  notice.textContent = message;
+  notice.classList.add('show');
 }
 
 /**

@@ -1,27 +1,27 @@
 # Timesheet Reminder Chrome Extension
 
-A Chrome extension that sends friendly reminders to fill your timesheet at configured times. Set multiple reminders for any day and time with support for daily, weekly, and monthly recurrence.
+A Chrome extension that sends friendly reminders to fill your timesheet at configured times. Set multiple reminders with daily, weekly, monthly, or minutely recurrence, each with its own optional action button/link.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kipergil)
 
 ## Features
 
-✅ **Customizable Reminders** — Add multiple reminders with different schedules
-✅ **Multiple Recurrence Types** — Daily, weekly (specific day), or monthly
-✅ **Timezone Support** — Auto-detects your timezone, with option to override
-✅ **Friendly Popup** — Centered modal notification on any webpage
-✅ **Snooze Option** — Snooze for 15 minutes if you need more time
-✅ **Timesheet URL** — Quickly access your timesheet with a dedicated button
-✅ **Browser Notifications** — Fallback notifications if no tab is active
-✅ **Persistent Storage** — Reminders and settings survive browser restarts
-✅ **Easy Management** — Dedicated settings page for managing all reminders
+✅ **Customizable Reminders** — Add multiple reminders with different schedules and messages
+✅ **Flexible Recurrence** — Daily, weekly (one or more days), monthly (day 1–28), or every N minutes
+✅ **Per-Reminder Action Button** — Optionally attach a label + URL (e.g. your timesheet link) that opens in a new tab when clicked
+✅ **Timezone Support** — Auto-detects your system timezone, with a manual override
+✅ **Friendly Popup** — Centered modal shown on top of whatever webpage you're on
+✅ **Snooze** — Snooze a reminder for a configurable number of minutes, with a configurable max snooze count before you must acknowledge it
+✅ **Persistent Storage** — Reminders and settings are saved via `chrome.storage.local` and survive browser restarts
+✅ **Catches Up on Missed Checks** — If the browser was closed or asleep at the scheduled time, the reminder still fires once it's reopened, instead of silently skipping that day/week/month
+✅ **Toolbar Dashboard + Settings Page** — A quick-glance popup from the toolbar icon, and a full settings page for managing reminders
 
 ## Default Behavior
 
 When you first install the extension:
-- A default reminder is created for **Friday at 3:00 PM** (15:00)
-- Your system timezone is automatically detected
-- Reminders are stored locally in your browser
+- A default reminder is created for **Friday at 3:00 PM** (weekly) with the message "Time to fill your timesheet!"
+- Your system timezone is automatically detected and used
+- Reminders and preferences are stored locally in your browser (nothing is sent anywhere)
 
 ## Installation
 
@@ -35,6 +35,7 @@ When you first install the extension:
 6. The extension should now appear in your extensions list
 
 ### Method 2: Chrome Web Store
+
 *(Coming soon)*
 
 ## Testing
@@ -49,67 +50,77 @@ This covers recurrence/trigger calculation, snooze/acknowledge state, storage CR
 
 ## Usage
 
-### Open Settings
+### The Toolbar Popup
 
-Click the extension icon in your Chrome toolbar to open the settings page.
+Click the extension icon in your Chrome toolbar to open a quick-glance dashboard: your configured reminders with their next scheduled time (live countdown), plus buttons to jump to the full Settings page, clear all acknowledgements, or clear all snooze counts.
+
+### Open the Settings Page
+
+Click **Open Settings** in the toolbar popup (or `chrome.runtime` → open `src/settings/settings.html` directly while developing) to manage reminders, timezone, and snooze behavior.
 
 ### Add a New Reminder
 
-1. Click the "Add Reminder" button
+1. In Settings, click **+ Add Reminder**
 2. Enter your reminder message
-3. Select recurrence type:
-   - **Daily** — Repeats every day at specified time
-   - **Weekly** — Repeats on a specific day each week
-   - **Monthly** — Repeats on a specific day each month (1-28)
-4. Set the time (hour and minute)
-5. Click "Save Reminder"
-
-### Configure Timesheet URL
-
-1. In the settings page, scroll to "Timesheet URL" section
-2. Enter your timesheet application URL (e.g., `https://example.com/timesheet`)
-3. Click "Save Timesheet URL"
-4. When a reminder popup appears, you'll see an "Open Timesheet" button
+3. Optionally set an **Action Button Name** and **Action URL** (e.g. your timesheet link) — if both are set, the reminder popup shows a button that opens that URL in a new tab
+4. Select a recurrence type:
+   - **Minutely** — Repeats every N minutes (1–120), aligned to the hour (e.g. every 5 minutes means `:00, :05, :10, ...`)
+   - **Daily** — Repeats every day at a specified time
+   - **Weekly** — Repeats on one or more selected days of the week
+   - **Monthly** — Repeats on a specific day of the month (1–28)
+5. Set the time (and day(s), where applicable)
+6. Click **Save Reminder**
 
 ### Acknowledge or Snooze a Reminder
 
-When a reminder popup appears:
-- **Acknowledge** — Dismiss the reminder (won't show again today)
-- **Snooze** — Dismiss for 15 minutes
-- **Open Timesheet** — Open your timesheet URL in a new tab
+When a reminder popup appears on a webpage:
+- **Acknowledge** — Dismiss the reminder; it won't show again until its next scheduled occurrence
+- **Snooze** — Postpone for the configured snooze duration (default 15 minutes), up to the configured max snooze count
+- The optional action button — Opens the reminder's configured URL in a new tab (only shown if one is set)
 
 ### Edit or Delete Reminders
 
-1. Go to settings page
+1. Go to the Settings page
 2. Find the reminder in your reminders list
-3. Click "Edit" to modify or "Delete" to remove
+3. Click **Edit** to modify it or **Delete** to remove it
+
+### Snooze Settings
+
+In Settings, under **Timezone** you can also configure:
+- **Snooze Interval** — How many minutes a snooze lasts
+- **Max Snooze Count Per Reminder** — How many times a given reminder can be snoozed before it must be acknowledged
 
 ### Reset Settings
 
-- Click "Reset to System Timezone" to restore auto-detected timezone
-- Click "Clear All Reminders" to delete all reminders (cannot be undone)
+- Click **Reset to System Timezone** to restore your system's auto-detected timezone
+- Click **Clear All Reminders** to delete all reminders (cannot be undone)
 
 ## Storage
 
-All data is stored locally in your browser using localStorage:
+All data is stored locally via `chrome.storage.local` — nothing leaves your browser:
 
-```
-localStorage['reminders'] = [
-  {
-    id: 'reminder-xxx',
-    message: 'Time to fill your timesheet!',
-    recurrence: {type: 'weekly', dayOfWeek: 5, hour: 15, minute: 0},
-    lastShown: timestamp,
-    enabled: true
-  }
-]
-
-localStorage['userPreferences'] = {
-  timezone: 'America/New_York',
-  notificationsEnabled: true,
-  snoozeDuration: 15,
-  timesheetUrl: 'https://...'
-}
+```js
+chrome.storage.local.get(['reminders', 'userPreferences'])
+// reminders: [
+//   {
+//     id: 'reminder-xxx',
+//     message: 'Time to fill your timesheet!',
+//     actionButtonLabel: 'Open Timesheet',
+//     actionUrl: '',
+//     recurrence: { type: 'weekly', daysOfWeek: [5], hour: 15, minute: 0 },
+//     enabled: true,
+//     lastShown: null,
+//     lastTriggeredAt: null,
+//     snoozedUntil: null,
+//     snoozeCount: 0
+//   }
+// ]
+//
+// userPreferences: {
+//   timezone: 'America/New_York',
+//   snoozeDuration: 15,
+//   maxSnoozeCount: 3
+// }
 ```
 
 ## Project Structure
@@ -123,125 +134,117 @@ chrome-extension-timesheet-reminder/
 │   ├── background/
 │   │   └── background-worker.js     # Service worker (scheduling logic)
 │   ├── content/
-│   │   └── content-script.js        # Content script (popup injection)
+│   │   ├── content-script.js        # Content script (popup injection)
+│   │   └── popup-template.html      # Markup for the injected reminder modal
+│   ├── popup/
+│   │   ├── popup.html               # Toolbar dashboard UI
+│   │   ├── popup.js                 # Toolbar dashboard logic
+│   │   └── popup.css                # Toolbar dashboard styles
 │   ├── settings/
 │   │   ├── settings.html            # Settings page UI
 │   │   ├── settings.js              # Settings page logic
 │   │   └── reminders-manager.js     # CRUD helpers
 │   ├── styles/
 │   │   ├── settings.css             # Settings page styles
-│   │   └── popup-modal.css          # (Injected inline in content-script)
+│   │   └── popup-modal.css          # Injected reminder modal styles
 │   └── utils/
 │       ├── timezone.js              # Timezone utilities
 │       ├── recurrence.js            # Recurrence calculation
-│       ├── storage.js               # Storage wrapper
+│       ├── storage.js               # chrome.storage.local wrapper
 │       └── time-checker.js          # Reminder trigger logic
 ├── test/                            # Unit tests (node --test), see "Testing"
 └── assets/
-    └── icon-128.png                 # Extension icon
+    ├── icon.svg                      # Icon source
+    └── icon-{16,32,48,128}.png       # Generated extension icons
 ```
 
 ## How It Works
 
 ### 1. Background Service Worker
-- Runs in the background and checks every minute if any reminder should trigger
-- When a reminder is due:
-  - Sends message to all content scripts to show popup
-  - Sends browser notification as fallback
-- Checks for missed reminders on browser startup
+- Runs in the background; a `chrome.alarms` alarm wakes it at the earliest upcoming reminder time (not a fixed every-minute poll)
+- When a reminder is due, it sends a message to every open tab's content script to show the popup
+- Re-checks for due/missed reminders on browser startup and whenever reminders/preferences change, so a reminder whose time passed while the browser was closed or asleep still fires once it's reopened, instead of being silently skipped
 
 ### 2. Content Script
-- Listens for messages from background worker
-- Injects styled modal popup into current webpage
+- Runs on every page (`<all_urls>`), listening for messages from the background worker
+- Injects a styled modal popup into the current webpage when a reminder is due
 - Handles user interactions:
-  - **Acknowledge** — Marks reminder as shown
-  - **Snooze** — Postpones reminder for 15 minutes
-  - **Open Timesheet** — Opens configured URL in new tab
+  - **Acknowledge** — Marks the reminder as shown
+  - **Snooze** — Postpones the reminder for the configured snooze duration
+  - **Action button** (optional, per-reminder) — Opens the configured URL in a new tab
 
-### 3. Settings Page
-- Accessible via extension icon click
-- Manage timesheet URL
-- Add/edit/delete reminders
-- View all configured reminders
-- Clear all data if needed
+### 3. Toolbar Popup & Settings Page
+- The toolbar popup (`src/popup`) is a quick dashboard: reminders, their next-check countdown, and bulk actions
+- The settings page (`src/settings`, opened from the popup) manages timezone, snooze configuration, and full reminder CRUD
 
 ## Supported Recurrence Patterns
 
+### Minutely
+- Triggers every N minutes (1–120), aligned to the hour
+- Example: every 5 minutes → 00, 05, 10, 15, ...
+
 ### Daily
-- Triggers at same time every day
+- Triggers at the same time every day
 - Example: 9:30 AM every day
 
 ### Weekly
-- Triggers on specific day of week
-- Example: Friday at 3:00 PM
+- Triggers on one or more selected days of the week
+- Example: Monday, Wednesday, and Friday at 3:00 PM
 
 ### Monthly
-- Triggers on specific day of month (1-28)
-- Limited to days 1-28 to work consistently every month
-- Example: 1st of every month at 9:00 AM
+- Triggers on a specific day of the month (1–28)
+- Limited to days 1–28 so it works consistently every month, including February
 
 ## Timezone Handling
 
-- **Auto-detection** — Extension detects your system timezone automatically
-- **Manual Override** — You can change timezone in settings
-- **Calculation** — All reminder times are calculated in your configured timezone
-
-## Browser Notifications
-
-The extension sends browser notifications as a fallback when:
-- No tab is currently visible/focused
-- No content script response within 2 seconds
-
-You can disable notifications in the settings page (future enhancement).
+- **Auto-detection** — The extension detects your system timezone automatically on first install
+- **Manual Override** — You can change the stored timezone in Settings
+- **Calculation** — All reminder times are calculated against the configured timezone, not necessarily your browser's live current timezone if you've travelled and not reset it
 
 ## Limitations & Known Issues
 
-- Reminders won't trigger if browser is completely closed (will trigger on next browser startup)
-- Monthly reminders limited to days 1-28 (February edge case)
-- Snooze duration is fixed at 15 minutes (configurable in preferences)
-- Extension works on Chrome 127+ (Manifest v3 requirement)
-- Timezone detection uses Intl API (should work on all modern browsers)
+- If the browser is completely closed when a reminder's time arrives, it fires as soon as the browser (and this extension's service worker) is next running — there is no OS-level notification while Chrome itself isn't running
+- Monthly reminders are limited to days 1–28 (so they work consistently every month, including February)
+- There is no `chrome.notifications` fallback — reminders only show as an in-page popup, so they won't appear if you have no browser tabs open at all when the alarm fires (they'll still catch up once a tab exists)
 
 ## Troubleshooting
 
 ### Reminder not triggering
-1. Check if extension is enabled in `chrome://extensions/`
-2. Verify reminder time and recurrence pattern in settings
-3. Check if browser notifications are blocked in Chrome settings
-4. Ensure reminder is enabled (not disabled toggle in settings)
+1. Check that the extension is enabled in `chrome://extensions/`
+2. Verify the reminder's time and recurrence pattern in Settings
+3. Make sure the reminder itself is enabled (not toggled off)
+4. Make sure you have at least one regular webpage tab open — the popup is injected into tabs, not shown as a system notification
 
-### Can't see popup on some websites
-- Some websites with strict CSP policies might block injection
-- Try accessing a different website to test
-- Browser notifications should still work as fallback
+### Can't see the popup on some websites
+- The content script runs on all pages, but a small number of special pages (e.g. the Chrome Web Store, `chrome://` pages, or a page you had open before installing/reloading the extension) won't have it injected
+- Try a different, ordinary webpage to confirm reminders are working
 
-### Lost reminders after browser restart
-- All reminders are stored in localStorage
-- Only lost if you clear browser data/cache
-- Check Settings > Privacy > Clear browsing data
+### Lost reminders after reinstalling or clearing data
+- Reminders are stored in `chrome.storage.local`, scoped to the extension
+- They're lost only if you remove/reinstall the extension or explicitly clear its storage — not by clearing a website's cookies/localStorage
 
-### Timesheet URL not opening
-1. Verify URL is valid and starts with `http://` or `https://`
-2. Check browser popup blocker settings
-3. Ensure URL is accessible in your browser
+### Action button/link not opening
+1. Verify the Action URL is a valid `http://` or `https://` URL (other schemes, like `javascript:`, are rejected)
+2. Check your browser's popup-blocker settings
+3. Make sure the URL is reachable from your browser
 
 ## Future Enhancements
 
-- [ ] Sound alerts for reminders
-- [ ] Custom snooze duration
+- [ ] `chrome.notifications` fallback for when no tab is open
 - [ ] Reminder history/logs
 - [ ] Cloud sync across devices
 - [ ] Firefox support
 - [ ] Recurring reminder templates
 - [ ] Reminder categories
-- [ ] Time zone conversion display
 
 ## Permissions
 
 This extension requires:
-- `storage` — Save reminders and settings
+- `storage` — Save reminders and settings locally
 - `alarms` — Schedule reminder checks
 - `<all_urls>` (host permission) — Inject reminder popups on any website
+
+No data is collected, transmitted, or sent to any server — everything stays in `chrome.storage.local` on your own machine.
 
 ## License
 
@@ -253,6 +256,8 @@ For issues, feature requests, or questions:
 1. Check the Troubleshooting section above
 2. Review the project structure and code
 3. Open an issue on GitHub
+
+If this extension has saved you from a missed timesheet, you can [support development on Ko-fi](https://ko-fi.com/kipergil) — entirely optional, the extension is free and fully functional without it.
 
 ---
 

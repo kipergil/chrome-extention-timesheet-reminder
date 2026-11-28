@@ -48,6 +48,21 @@
   line-height: 1.5;
 }
 
+.timesheet-reminder-notice {
+  display: none;
+  margin: -8px 0 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #8a2e22;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.timesheet-reminder-notice.show {
+  display: block;
+}
+
 .timesheet-reminder-buttons {
   display: grid;
   grid-template-columns: 1fr;
