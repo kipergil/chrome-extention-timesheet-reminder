@@ -177,6 +177,29 @@ describe('REMINDER_SNOOZED message', () => {
     const response = await chrome._test.sendMessage({ type: 'REMINDER_SNOOZED', reminderId: 'missing' });
     assert.equal(response.status, 'not_found');
   });
+
+  test('two tabs snoozing the same reminder at once both count, and the limit still holds (regression: multi-tab lost-update race)', async () => {
+    // Simulates the same reminder popup being open in two tabs at once and
+    // the user clicking Snooze in each before either tab hears back - this
+    // exercises the real onMessage listener end-to-end, not just the
+    // underlying storage function.
+    await setReminders([
+      { id: 'r1', message: 'Hi', enabled: true, recurrence: { type: 'daily', hour: 9, minute: 0 }, snoozedUntil: null, snoozeCount: 0 }
+    ]);
+    await setUserPreferences({ maxSnoozeCount: 3 });
+
+    const [r1, r2] = await Promise.all([
+      chrome._test.sendMessage({ type: 'REMINDER_SNOOZED', reminderId: 'r1' }),
+      chrome._test.sendMessage({ type: 'REMINDER_SNOOZED', reminderId: 'r1' })
+    ]);
+
+    assert.equal(r1.status, 'ok');
+    assert.equal(r2.status, 'ok');
+    assert.deepEqual([r1.currentSnoozeCount, r2.currentSnoozeCount].sort(), [1, 2]);
+
+    const [reminder] = await getReminders();
+    assert.equal(reminder.snoozeCount, 2);
+  });
 });
 
 describe('bulk actions', () => {

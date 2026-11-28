@@ -3,7 +3,7 @@
  * Manages reminder scheduling and triggering
  */
 
-import { initializeDefaultReminders, getReminders, getUserPreferences, updateReminder, updateReminders } from '../utils/storage.js';
+import { initializeDefaultReminders, getReminders, getUserPreferences, updateReminder, updateReminders, updateAllReminders, trySnoozeReminder } from '../utils/storage.js';
 import { getEarliestNextReminderTimestamp, getRemindersThatShouldTrigger } from '../utils/time-checker.js';
 
 const NEXT_REMINDER_ALARM = 'nextReminderCheck';
@@ -160,35 +160,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   } else if (message.type === 'REMINDER_SNOOZED') {
     console.log('Reminder snoozed:', message.reminderId);
-    Promise.all([getReminders(), getUserPreferences()]).then(([reminders, prefs]) => {
-      const reminder = reminders.find((r) => r.id === message.reminderId);
-      if (!reminder) {
-        sendResponse({ status: 'not_found' });
-        return;
-      }
-
-      const maxSnoozeCount = prefs.maxSnoozeCount ?? 3;
-      const currentSnoozeCount = reminder.snoozeCount || 0;
-      if (currentSnoozeCount >= maxSnoozeCount) {
-        sendResponse({
-          status: 'limit_reached',
-          maxSnoozeCount,
-          currentSnoozeCount
-        });
-        return;
-      }
-
-      const snoozeDurationMinutes = prefs.snoozeDuration || 15;
-      updateReminder(message.reminderId, {
-        snoozedUntil: Date.now() + (snoozeDurationMinutes * 60 * 1000),
-        snoozeCount: currentSnoozeCount + 1
-      }).then(() => {
-        sendResponse({
-          status: 'ok',
-          currentSnoozeCount: currentSnoozeCount + 1,
-          maxSnoozeCount
-        });
+    getUserPreferences().then((prefs) => {
+      // The read, limit check, and increment all happen inside
+      // trySnoozeReminder's own atomic read-modify-write cycle, so this is
+      // safe even if the same reminder is snoozed from two tabs at once.
+      return trySnoozeReminder(message.reminderId, {
+        snoozeDurationMinutes: prefs.snoozeDuration || 15,
+        maxSnoozeCount: prefs.maxSnoozeCount ?? 3
       });
+    }).then((result) => {
+      sendResponse(result);
     });
     return true;
   } else if (message.type === 'OPEN_TIMESHEET') {
@@ -207,46 +188,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   } else if (message.type === 'CLEAR_ACKNOWLEDGEMENTS') {
-    getReminders().then((reminders) => {
-      const updatedReminders = reminders.map((reminder) => ({
-        ...reminder,
-        lastShown: null
-      }));
-
-      chrome.storage.local.set({ reminders: updatedReminders }, () => {
-        const now = Date.now();
-        const activeSnoozedCount = updatedReminders.filter(
-          (r) => r.snoozedUntil && r.snoozedUntil > now
-        ).length;
-        sendResponse({
-          status: 'ok',
-          summary: {
-            total: updatedReminders.length,
-            acknowledged: 0,
-            activeSnoozed: activeSnoozedCount
-          }
-        });
+    updateAllReminders((reminder) => ({
+      ...reminder,
+      lastShown: null
+    })).then((updatedReminders) => {
+      const now = Date.now();
+      const activeSnoozedCount = updatedReminders.filter(
+        (r) => r.snoozedUntil && r.snoozedUntil > now
+      ).length;
+      sendResponse({
+        status: 'ok',
+        summary: {
+          total: updatedReminders.length,
+          acknowledged: 0,
+          activeSnoozed: activeSnoozedCount
+        }
       });
     });
     return true;
   } else if (message.type === 'CLEAR_SNOOZE_COUNT') {
-    getReminders().then((reminders) => {
-      const updatedReminders = reminders.map((reminder) => ({
-        ...reminder,
-        snoozeCount: 0,
-        snoozedUntil: null
-      }));
-
-      chrome.storage.local.set({ reminders: updatedReminders }, () => {
-        const acknowledgedCount = updatedReminders.filter((r) => !!r.lastShown).length;
-        sendResponse({
-          status: 'ok',
-          summary: {
-            total: updatedReminders.length,
-            acknowledged: acknowledgedCount,
-            activeSnoozed: 0
-          }
-        });
+    updateAllReminders((reminder) => ({
+      ...reminder,
+      snoozeCount: 0,
+      snoozedUntil: null
+    })).then((updatedReminders) => {
+      const acknowledgedCount = updatedReminders.filter((r) => !!r.lastShown).length;
+      sendResponse({
+        status: 'ok',
+        summary: {
+          total: updatedReminders.length,
+          acknowledged: acknowledgedCount,
+          activeSnoozed: 0
+        }
       });
     });
     return true;

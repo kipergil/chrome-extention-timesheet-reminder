@@ -4,9 +4,12 @@ import { createChromeMock } from '../helpers/chrome-mock.js';
 import {
   getReminders,
   setReminders,
+  replaceAllReminders,
   addReminder,
   updateReminder,
   updateReminders,
+  updateAllReminders,
+  trySnoozeReminder,
   deleteReminder,
   getUserPreferences,
   setUserPreferences,
@@ -120,6 +123,114 @@ describe('reminders CRUD', () => {
     await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
     await setReminders([]);
     assert.deepEqual(await getReminders(), []);
+  });
+
+  test('replaceAllReminders overwrites the whole list', async () => {
+    await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
+    await replaceAllReminders([]);
+    assert.deepEqual(await getReminders(), []);
+  });
+
+  test('updateAllReminders applies a transform to every reminder and returns the updated list', async () => {
+    await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 }, enabled: true });
+    await addReminder({ message: 'B', recurrence: { type: 'daily', hour: 10, minute: 0 }, enabled: true });
+
+    const result = await updateAllReminders((reminder) => ({ ...reminder, snoozeCount: 0, snoozedUntil: null }));
+
+    assert.equal(result.length, 2);
+    result.forEach((r) => {
+      assert.equal(r.snoozeCount, 0);
+      assert.equal(r.snoozedUntil, null);
+    });
+
+    const stored = await getReminders();
+    assert.deepEqual(stored, result);
+  });
+
+  test('addReminder calls do not lose each other even when fired concurrently (regression: lost-update race)', async () => {
+    // Two addReminder() calls issued back-to-back both read the reminders
+    // list before either has written it back; without serialization, the
+    // second write would overwrite the first's addition entirely.
+    await Promise.all([
+      addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } }),
+      addReminder({ message: 'B', recurrence: { type: 'daily', hour: 10, minute: 0 } })
+    ]);
+
+    const reminders = await getReminders();
+    assert.equal(reminders.length, 2);
+    assert.deepEqual(reminders.map((r) => r.message).sort(), ['A', 'B']);
+  });
+});
+
+describe('trySnoozeReminder', () => {
+  test('succeeds and increments snoozeCount', async () => {
+    const id = await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
+    const before = Date.now();
+
+    const result = await trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 3 });
+
+    assert.equal(result.status, 'ok');
+    assert.equal(result.currentSnoozeCount, 1);
+    assert.equal(result.maxSnoozeCount, 3);
+
+    const [reminder] = await getReminders();
+    assert.equal(reminder.snoozeCount, 1);
+    assert.ok(reminder.snoozedUntil - before >= 15 * 60 * 1000 - 1000);
+  });
+
+  test('reports limit_reached once the max snooze count is hit', async () => {
+    const id = await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
+    await updateReminder(id, { snoozeCount: 3 });
+
+    const result = await trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 3 });
+
+    assert.equal(result.status, 'limit_reached');
+    assert.equal(result.currentSnoozeCount, 3);
+
+    const [reminder] = await getReminders();
+    assert.equal(reminder.snoozeCount, 3, 'snoozeCount must not change once the limit is hit');
+  });
+
+  test('reports not_found for an unknown reminder id', async () => {
+    const result = await trySnoozeReminder('does-not-exist', { snoozeDurationMinutes: 15, maxSnoozeCount: 3 });
+    assert.equal(result.status, 'not_found');
+  });
+
+  test('two concurrent snooze attempts for the same reminder both count (regression: lost-update race)', async () => {
+    // Before the fix, both calls read the same pre-snooze snoozeCount and
+    // each independently computed "+1", so the second write silently
+    // clobbered the first instead of compounding - two snoozes from two
+    // tabs at once would only ever count as one.
+    const id = await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
+
+    const [r1, r2] = await Promise.all([
+      trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 3 }),
+      trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 3 })
+    ]);
+
+    assert.equal(r1.status, 'ok');
+    assert.equal(r2.status, 'ok');
+    assert.deepEqual([r1.currentSnoozeCount, r2.currentSnoozeCount].sort(), [1, 2]);
+
+    const [reminder] = await getReminders();
+    assert.equal(reminder.snoozeCount, 2);
+  });
+
+  test('the snooze limit is still enforced exactly once under concurrent attempts', async () => {
+    // With maxSnoozeCount 1, two concurrent attempts starting from count 0
+    // must resolve to exactly one 'ok' and one 'limit_reached' - never both
+    // succeeding (which would silently bypass the configured limit).
+    const id = await addReminder({ message: 'A', recurrence: { type: 'daily', hour: 9, minute: 0 } });
+
+    const [r1, r2] = await Promise.all([
+      trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 1 }),
+      trySnoozeReminder(id, { snoozeDurationMinutes: 15, maxSnoozeCount: 1 })
+    ]);
+
+    assert.deepEqual([r1.status, r2.status].sort(), ['limit_reached', 'ok']);
+
+    const [reminder] = await getReminders();
+    assert.equal(reminder.snoozeCount, 1);
   });
 });
 
